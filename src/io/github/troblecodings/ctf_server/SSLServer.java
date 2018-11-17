@@ -2,7 +2,7 @@ package io.github.troblecodings.ctf_server;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Date;
+import java.util.*;
 
 import javax.net.ssl.*;
 
@@ -26,18 +26,57 @@ import javax.net.ssl.*;
  * @author MrTroble
  *
  */
-public class SSLServer {
-	
+public class SSLServer implements Runnable {
+
 	public static LoggerFile LOGGER;
 	private static SSLServerSocket sslserver;
-	
+	private static ArrayList<Socket> sockets = new ArrayList<>();
+
+	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {
 		Date date = new Date();
-		LOGGER = new LoggerFile(new FileOutputStream(new File("log-" + date.getMonth() + "-" + date.getDay() + "-" + (1900 + date.getYear()))));
+		LOGGER = new LoggerFile(new FileOutputStream(
+				new File("log-" + date.getMonth() + "-" + date.getDay() + "-" + (1900 + date.getYear()) + "-"
+						+ date.getHours() + "-" + date.getMinutes() + "-" + date.getSeconds() + ".log")));
 		sslserver = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(555);
-		while(true) {
+		Thread thrd = new Thread(new SSLServer());
+		thrd.start();
+		while (true) {
 			Socket sk = sslserver.accept();
-			LOGGER.println("Client[" + sk + "] connected to server");
+			LOGGER.println(sk + " connected to server");
+			sockets.add(sk);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public void run() {
+		while (true) {
+			for (Socket s : (ArrayList<Socket>)sockets.clone()) {
+				if (s == null || !s.isConnected()) {
+					LOGGER.println(s + " disconnected from the server");
+					sockets.remove(s);
+				} else {
+					try {
+						if (s.getInputStream().available() > 0) {
+							Scanner sc = new Scanner(s.getInputStream());
+							if (sc.hasNextLine()) {
+								String n = sc.nextLine();
+								LOGGER.println("Message incoming" + n);
+							}
+							sc.close();
+						}
+					} catch (IOException e) {
+						LOGGER.println(e);
+						e.printStackTrace(LOGGER);
+					}
+				}
+			}
 		}
 	}
 

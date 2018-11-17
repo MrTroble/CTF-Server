@@ -35,10 +35,11 @@ public class LoggerFile extends PrintStream {
 	/* (non-Javadoc)
 	 * @see java.io.PrintStream#println(java.lang.String)
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public void println(String x) {
 		Date date = new Date();
-		x = "[" + date.getHours() + ":" + date.getMinutes() + ":" + date.getMinutes() + "]" + x;
+		x = "[" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "]" + x;
 		super.println(x);
 	}
 	

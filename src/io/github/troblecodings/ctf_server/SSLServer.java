@@ -39,11 +39,23 @@ public class SSLServer {
 						+ date.getHours() + "-" + date.getMinutes() + "-" + date.getSeconds() + ".log")));		
 		sslserver = new ServerSocket(555);
 		ExecutorService service =  Executors.newCachedThreadPool();
+		LOGGER.println("Started server!");
 		while (true) {
 			Socket sk = sslserver.accept();
 			LOGGER.println(sk + " connected to server");
 			sockets.add(sk);
 			service.submit(new SocketInput(sk));
+		}
+	}
+	
+	public static void sendToAll(String nm) throws Exception {
+		Iterator<Socket> it = sockets.iterator();
+		while(it.hasNext()) {
+			Socket sk = it.next();
+			PrintWriter wr = new PrintWriter(sk.getOutputStream());
+			wr.println(nm);
+			wr.flush();
+			LOGGER.println(sk + " sended to: " + nm);
 		}
 	}
 

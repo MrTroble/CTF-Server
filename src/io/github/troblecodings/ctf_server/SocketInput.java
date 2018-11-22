@@ -16,6 +16,7 @@
 
 package io.github.troblecodings.ctf_server;
 
+import java.io.PrintWriter;
 import java.net.*;
 import java.util.Scanner;
 
@@ -26,6 +27,7 @@ import java.util.Scanner;
 public class SocketInput implements Runnable {
 
 	private Socket socket;
+	private PrintWriter writer;
 
 	/**
 	 * Thread runnable for coherent input detection
@@ -45,17 +47,27 @@ public class SocketInput implements Runnable {
 	public void run() {
 		try {
 			Scanner scanner = new Scanner(socket.getInputStream());
-			while (socket.isConnected()) {
-				if (scanner.hasNextLine()) {
-					String input = scanner.nextLine();
-					SSLServer.LOGGER.println(socket + " send data " + input);
-				}
+			this.writer = new PrintWriter(socket.getOutputStream());
+			while (scanner.hasNextLine()) {
+				String input = scanner.nextLine();
+				SSLServer.LOGGER.println(socket + " send data " + input);
+				String command = input.split(" ")[0];
+				String arg = input.replaceFirst(command + " ", "");
+				processData(command, arg.split(":"));
 			}
 			SSLServer.LOGGER.println(socket + " disconnected from the server");
 			SSLServer.sockets.remove(socket);
 			scanner.close();
 		} catch (Exception e) {
 			e.printStackTrace(SSLServer.LOGGER);
+		}
+	}
+
+	private void processData(String command, String[] args) throws Exception {
+		switch (command) {
+		case "disable":
+			SSLServer.sendToAll("lockdown " + args[0] + ":" + args[1]);
+			break;
 		}
 	}
 

@@ -5,6 +5,9 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import javafx.application.Application;
+import javafx.stage.Stage;
+
 /*-*****************************************************************************
  * Copyright 2018 MrTroble
  * 
@@ -25,27 +28,20 @@ import java.util.concurrent.*;
  * @author MrTroble
  *
  */
-public class SSLServer {
+public class ServerApp extends Application implements Runnable{
 
 	public static LoggerFile LOGGER;
 	private static ServerSocket sslserver;
 	public static ArrayList<Socket> sockets = new ArrayList<>();
-
+	public static ExecutorService service;
+	
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {
 		Date date = new Date();
 		LOGGER = new LoggerFile(new FileOutputStream(
 				new File("log-" + date.getMonth() + "-" + date.getDay() + "-" + (1900 + date.getYear()) + "-"
 						+ date.getHours() + "-" + date.getMinutes() + "-" + date.getSeconds() + ".log")));		
-		sslserver = new ServerSocket(555);
-		ExecutorService service =  Executors.newCachedThreadPool();
-		LOGGER.println("Started server!");
-		while (true) {
-			Socket sk = sslserver.accept();
-			LOGGER.println(sk + " connected to server");
-			sockets.add(sk);
-			service.submit(new SocketInput(sk));
-		}
+		launch(args);
 	}
 	
 	public static void sendToAll(String nm) throws Exception {
@@ -56,6 +52,38 @@ public class SSLServer {
 			wr.println(nm);
 			wr.flush();
 			LOGGER.println(sk + " sended to: " + nm);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see javafx.application.Application#start(javafx.stage.Stage)
+	 */
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		//Starting server
+		Thread th = new Thread(this);
+		th.start();
+		
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run(){
+		try {
+			sslserver = new ServerSocket(555);
+			service =  Executors.newCachedThreadPool();
+			LOGGER.println("Started server!");
+			while (true) {
+				Socket sk = sslserver.accept();
+				LOGGER.println(sk + " connected to server");
+				sockets.add(sk);
+				service.submit(new SocketInput(sk));
+			}
+		} catch (Exception e) {
+			e.printStackTrace(LOGGER);
 		}
 	}
 

@@ -18,7 +18,7 @@ package io.github.troblecodings.ctf_server;
 
 import java.io.PrintWriter;
 import java.net.*;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * @author MrTroble
@@ -50,23 +50,35 @@ public class SocketInput implements Runnable {
 			this.writer = new PrintWriter(socket.getOutputStream());
 			while (scanner.hasNextLine()) {
 				String input = scanner.nextLine();
-				SSLServer.LOGGER.println(socket + " send data " + input);
+				ServerApp.LOGGER.println(socket + " send data " + input);
 				String command = input.split(" ")[0];
 				String arg = input.replaceFirst(command + " ", "");
 				processData(command, arg.split(":"));
 			}
-			SSLServer.LOGGER.println(socket + " disconnected from the server");
-			SSLServer.sockets.remove(socket);
+			ServerApp.LOGGER.println(socket + " disconnected from the server");
+			ServerApp.sockets.remove(socket);
 			scanner.close();
 		} catch (Exception e) {
-			e.printStackTrace(SSLServer.LOGGER);
+			e.printStackTrace(ServerApp.LOGGER);
 		}
 	}
 
 	private void processData(String command, String[] args) throws Exception {
 		switch (command) {
 		case "disable":
-			SSLServer.sendToAll("lockdown " + args[0] + ":" + args[1]);
+			ServerApp.sendToAll("lock " + args[0] + ":" + args[1]);
+			Timer tm = new Timer();
+			tm.schedule(new TimerTask() {
+				
+				@Override
+				public void run() {
+					try {
+						ServerApp.sendToAll("unlock " + args[0] + ":" + args[1]);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}					
+				}
+			}, 10000);
 			break;
 		}
 	}

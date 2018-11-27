@@ -6,7 +6,12 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import javafx.application.Application;
-import javafx.stage.Stage;
+import javafx.event.*;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.GridPane;
+import javafx.stage.*;
 
 /*-*****************************************************************************
  * Copyright 2018 MrTroble
@@ -44,13 +49,18 @@ public class ServerApp extends Application implements Runnable{
 		launch(args);
 	}
 	
-	public static void sendToAll(String nm) throws Exception {
+	public static void sendToAll(String nm) {
 		Iterator<Socket> it = sockets.iterator();
 		while(it.hasNext()) {
 			Socket sk = it.next();
-			PrintWriter wr = new PrintWriter(sk.getOutputStream());
-			wr.println(nm);
-			wr.flush();
+			PrintWriter wr;
+			try {
+				wr = new PrintWriter(sk.getOutputStream());
+				wr.println(nm);
+				wr.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			LOGGER.println(sk + " sended to: " + nm);
 		}
 	}
@@ -64,7 +74,55 @@ public class ServerApp extends Application implements Runnable{
 		Thread th = new Thread(this);
 		th.start();
 		
+		GridPane root = new GridPane();
+		Scene sc = new Scene(root, 1000, 600);
+		primaryStage.setScene(sc);
+		primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+			
+			@SuppressWarnings("deprecation")
+			@Override
+			public void handle(WindowEvent event) {
+				Alert alert = new Alert(AlertType.WARNING);
+				alert.setHeaderText("Shutdown?");
+				alert.setContentText("Would your really like to shutdown the server?");
+				alert.setTitle("Close?");
+				alert.getButtonTypes().addAll(ButtonType.CANCEL);
+				Optional<ButtonType> btn = alert.showAndWait();
+				if(btn.isPresent() && btn.get() == ButtonType.OK) {
+					try {
+						th.stop();
+						ServerApp.sslserver.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					System.exit(0);
+				} else {
+					event.consume();
+				}
+			}
+		});
 		
+		GridPane players = new GridPane();
+		
+		for (int x = 0; x < 2; x++) {
+			for (int y = 1; y < 5; y++) {
+				players.add(new PlayerField(x == 0, y), x, y);
+			}
+		}
+		Button btn = new Button("Change");
+		btn.setOnAction(new EventHandler<ActionEvent>() {
+			
+			@Override
+			public void handle(ActionEvent event) {
+				players.getChildren().filtered(nd -> {return nd instanceof PlayerField;}).forEach(nd -> {
+					((TextField)nd).onActionProperty().getValue().handle(new ActionEvent());
+				});;
+			}
+		});
+		players.add(btn, 1, 5);
+		root.add(players, 0, 0);
+		
+		primaryStage.show();
 	}
 
 	/* (non-Javadoc)

@@ -47,4 +47,7 @@ public class PlayerField extends TextField implements EventHandler<ActionEvent>{
 		ServerApp.sendToAll("set_name " + team + ":" + index + ":" + this.getText());
 	}
 	
+	public boolean isRed() {
+		return this.team.equals("red");
+	}
 }

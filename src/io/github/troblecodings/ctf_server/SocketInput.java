@@ -16,8 +16,7 @@
 
 package io.github.troblecodings.ctf_server;
 
-import java.io.PrintWriter;
-import java.net.*;
+import java.net.Socket;
 import java.util.*;
 
 /**
@@ -27,7 +26,6 @@ import java.util.*;
 public class SocketInput implements Runnable {
 
 	private Socket socket;
-	private PrintWriter writer;
 
 	/**
 	 * Thread runnable for coherent input detection
@@ -47,7 +45,6 @@ public class SocketInput implements Runnable {
 	public void run() {
 		try {
 			Scanner scanner = new Scanner(socket.getInputStream());
-			this.writer = new PrintWriter(socket.getOutputStream());
 			while (scanner.hasNextLine()) {
 				String input = scanner.nextLine();
 				ServerApp.LOGGER.println(socket + " send data " + input);

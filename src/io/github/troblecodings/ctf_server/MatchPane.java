@@ -16,13 +16,14 @@
 
 package io.github.troblecodings.ctf_server;
 
-import java.util.*;
+import java.util.Date;
 
 import org.json.*;
 
 import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 
 /**
  * @author MrTroble
@@ -84,6 +85,14 @@ public class MatchPane extends GridPane implements Runnable {
 		ServerApp.sendToAll("match_end");
 	}
 
+	public void killPlayer(String[] args, boolean b) {
+		if(args[0].equals("red")) {
+			this.getChildren().filtered(nd -> {return nd instanceof PlayerLabel;}).get(Integer.valueOf(args[1]) - 1).setDisable(b);
+		} else {
+			this.getChildren().filtered(nd -> {return nd instanceof PlayerLabel;}).get(Integer.valueOf(args[1]) + 3).setDisable(b);
+		}
+	}
+	
 	public void fillWithJson(JSONObject json) {
 		this.getChildren().clear();
 		this.init();
@@ -95,12 +104,12 @@ public class MatchPane extends GridPane implements Runnable {
 		JSONArray pblue = jblue.getJSONArray("players");
 		int i = 1;
 		for(Object str : pred.toList()) {
-			this.add(new Label(str.toString()), 1, i);
+			this.add(new PlayerLabel(str.toString(), Color.RED) , 1, i);
 			i++;
 		}
 		i = 1;
 		for(Object str : pblue.toList()) {
-			this.add(new Label(str.toString()), 2, i);
+			this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
 			i++;
 		}
 	}

@@ -49,7 +49,7 @@ public class ServerApp extends Application implements Runnable{
 	private static Path path_history = Paths.get("match_history");
 	private static Path path_log = Paths.get("logs");
 	private static ListView<Label> plans = new ListView<Label>();
-	private static MatchPane matchpane = new MatchPane();
+	public static MatchPane matchpane = new MatchPane();
 
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {

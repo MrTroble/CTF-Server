@@ -64,12 +64,14 @@ public class SocketInput implements Runnable {
 		switch (command) {
 		case "disable":
 			ServerApp.sendToAll("lock " + args[0] + ":" + args[1]);
+			ServerApp.matchpane.killPlayer(args, true);
 			Timer tm = new Timer();
 			tm.schedule(new TimerTask() {
 				
 				@Override
 				public void run() {
 					try {
+						ServerApp.matchpane.killPlayer(args, false);
 						ServerApp.sendToAll("unlock " + args[0] + ":" + args[1]);
 					} catch (Exception e) {
 						e.printStackTrace();

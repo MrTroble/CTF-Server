@@ -8,17 +8,16 @@ import java.util.concurrent.*;
 
 import org.json.*;
 
-import javafx.application.Application;
+import javafx.application.*;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
+import javafx.event.*;
 import javafx.geometry.Insets;
-import javafx.scene.*;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.Pair;
-import jdk.nashorn.internal.parser.JSONParser;
 
 /*-*****************************************************************************
  * Copyright 2018 MrTroble
@@ -85,10 +84,18 @@ public class ServerApp extends Application implements Runnable{
 	 */
 	@SuppressWarnings("deprecation")
 	@Override
-	public void start(Stage primaryStage) throws Exception {
-		//Starting server
+	public void start(Stage primaryStage) throws Exception {	
 		Thread th = new Thread(this);
-		th.start();
+		LOGGER.println("Set port for Networking!");
+		TextInputDialog dialog = new TextInputDialog("555");
+		dialog.setTitle("Port");
+		dialog.setHeaderText("Set Port for server!");
+		dialog.showAndWait().ifPresent(str -> {
+			try { PORT = Integer.valueOf(str); } catch (Throwable t) {LOGGER.println("Wrong port configuration!");}
+			LOGGER.println("Running on port " + PORT);
+			//Starting server
+			th.start();
+		});
 		
 		GridPane root = new GridPane();
 		Scene sc = new Scene(root, 1000, 600);
@@ -208,6 +215,11 @@ public class ServerApp extends Application implements Runnable{
 	}
 	
 	private void updatePlanList() {
+		
+		Platform.runLater(() -> {
+			
+		});
+		
 		ObservableList<Label> itms = plans.getItems();
 		itms.clear();
 		itms.add(new Label("List of matches"));
@@ -242,13 +254,15 @@ public class ServerApp extends Application implements Runnable{
 		}
 	}
 
+	private static int PORT = 555;
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
 	public void run(){
 		try {
-			sslserver = new ServerSocket(555);
+			sslserver = new ServerSocket(PORT);
 			service =  Executors.newCachedThreadPool();
 			LOGGER.println("Started server!");
 			while (true) {

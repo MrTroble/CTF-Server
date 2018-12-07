@@ -65,15 +65,23 @@ public class MatchPane extends GridPane implements Runnable {
 		long ne = 0;
 		while((ne = new Date().getTime()) < last + 360000) {
 			long delta = (last + 360000) - ne;
+			long min = (long)((double)delta / (double)60000);
+			long sec = (long)((double) (delta % 60000) / (double)1000);
 			Platform.runLater(() -> {
-				this.time.setText("Time: " + (double)((double)delta / (double)1000));
+				this.time.setText("Time: " + min + "min " + sec + " sec");
 			});
 			try {
-				Thread.sleep(2);
+				//Performance?
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
+		onMatchFinished();
+	}
+	
+	private void onMatchFinished() {
+		ServerApp.sendToAll("match_end");
 	}
 
 	public void fillWithJson(JSONObject json) {

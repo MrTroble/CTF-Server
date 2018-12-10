@@ -15,6 +15,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.Pair;
@@ -50,6 +51,7 @@ public class ServerApp extends Application implements Runnable{
 	private static Path path_log = Paths.get("logs");
 	private static ListView<Label> plans = new ListView<Label>();
 	public static MatchPane matchpane = new MatchPane();
+	public static Image ICON = new Image(ServerApp.class.getResourceAsStream("Icon.png"));
 
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {
@@ -90,6 +92,7 @@ public class ServerApp extends Application implements Runnable{
 		TextInputDialog dialog = new TextInputDialog("555");
 		dialog.setTitle("Port");
 		dialog.setHeaderText("Set Port for server!");
+		((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 		dialog.showAndWait().ifPresent(str -> {
 			try { PORT = Integer.valueOf(str); } catch (Throwable t) {LOGGER.println("Wrong port configuration!");}
 			LOGGER.println("Running on port " + PORT);
@@ -101,12 +104,14 @@ public class ServerApp extends Application implements Runnable{
 		Scene sc = new Scene(root, 1000, 600);
 		primaryStage.setScene(sc);
 		primaryStage.setResizable(false);
+		primaryStage.getIcons().add(ICON);
 		primaryStage.setOnCloseRequest(ev -> {
 			Alert alert = new Alert(AlertType.WARNING);
 			alert.setHeaderText("Shutdown?");
 			alert.setContentText("Would your really like to shutdown the server?");
 			alert.setTitle("Close?");
 			alert.getButtonTypes().addAll(ButtonType.CANCEL);
+			((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 			Optional<ButtonType> btn = alert.showAndWait();
 			if(btn.isPresent() && btn.get() == ButtonType.OK) {
 				try {
@@ -215,11 +220,6 @@ public class ServerApp extends Application implements Runnable{
 	}
 	
 	private void updatePlanList() {
-		
-		Platform.runLater(() -> {
-			
-		});
-		
 		ObservableList<Label> itms = plans.getItems();
 		itms.clear();
 		itms.add(new Label("List of matches"));
@@ -232,17 +232,19 @@ public class ServerApp extends Application implements Runnable{
 						alert.setTitle("Load?");
 						alert.setHeaderText("Do you want to load this match?");
 						alert.setContentText("Match: " + lab.getText());
+						((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 						alert.showAndWait().ifPresent(tp -> {
 							if(tp == ButtonType.OK) {
-								plans.getItems().forEach(lb -> {lb.setDisable(false);});
 								try {
 									String str = new String(Files.readAllBytes(Paths.get(path_plan.toString(), lab.getText() + ".json")));
 									JSONObject obj = new JSONObject(str);
-									matchpane.fillWithJson(obj);
+									if(matchpane.fillWithJson(obj)) {
+										plans.getItems().forEach(lb -> {lb.setDisable(false);});
+										lab.setDisable(true);
+									}
 								} catch (IOException e) {
 									e.printStackTrace();
 								}
-								lab.setDisable(true);
 							}
 						});;
 					}

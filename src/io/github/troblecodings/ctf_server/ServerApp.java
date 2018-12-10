@@ -52,7 +52,8 @@ public class ServerApp extends Application implements Runnable{
 	private static ListView<Label> plans = new ListView<Label>();
 	public static MatchPane matchpane = new MatchPane();
 	public static Image ICON = new Image(ServerApp.class.getResourceAsStream("Icon.png"));
-
+	public static String SERVER_PW;
+	
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {
 		Date date = new Date();
@@ -88,14 +89,37 @@ public class ServerApp extends Application implements Runnable{
 	@Override
 	public void start(Stage primaryStage) throws Exception {	
 		Thread th = new Thread(this);
-		LOGGER.println("Set port for Networking!");
-		TextInputDialog dialog = new TextInputDialog("555");
-		dialog.setTitle("Port");
-		dialog.setHeaderText("Set Port for server!");
-		((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
-		dialog.showAndWait().ifPresent(str -> {
-			try { PORT = Integer.valueOf(str); } catch (Throwable t) {LOGGER.println("Wrong port configuration!");}
+		LOGGER.println("Set networking config!");		
+		Dialog<Pair<String, String>> config = new Dialog<>();
+		config.setTitle("Server config!");
+		GridPane configpane = new GridPane();
+		
+		configpane.add(new Label("Port"), 0, 0);
+		configpane.add(new Label("Password"), 0, 1);
+		
+		TextField port = new TextField("555");
+		PasswordField pw = new PasswordField();
+		configpane.add(port, 1, 0);
+		configpane.add(pw, 1, 1);
+		configpane.setVgap(15);
+		configpane.setHgap(15);
+		configpane.setPadding(new Insets(15));
+
+		config.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.CANCEL);
+		config.getDialogPane().setContent(configpane);
+		config.setResultConverter(tp -> {
+			if(tp == ButtonType.APPLY)return new Pair<String, String>(port.getText(), pw.getText());
+			return null;
+		});
+		((Stage) config.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
+		config.showAndWait().ifPresent(str -> {
+			try { PORT = Integer.valueOf(str.getKey()); } catch (Throwable t) {LOGGER.println("Wrong port configuration!");}
 			LOGGER.println("Running on port " + PORT);
+			if(str.getValue().isEmpty()) {
+				LOGGER.println("ATTENTION! No admin password given!");
+			} else {
+				SERVER_PW = str.getValue();
+			}
 			//Starting server
 			th.start();
 		});

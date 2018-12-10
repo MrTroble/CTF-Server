@@ -45,6 +45,13 @@ public class SocketInput implements Runnable {
 	public void run() {
 		try {
 			Scanner scanner = new Scanner(socket.getInputStream());
+			if(scanner.hasNextLine()) {
+				if(!scanner.nextLine().equals(ServerApp.SERVER_PW)) {
+					scanner.close();
+					ServerApp.LOGGER.println(socket + " Wrong admin password! Using as reciver!");
+					return;
+				}
+			}
 			while (scanner.hasNextLine()) {
 				String input = scanner.nextLine();
 				ServerApp.LOGGER.println(socket + " send data " + input);

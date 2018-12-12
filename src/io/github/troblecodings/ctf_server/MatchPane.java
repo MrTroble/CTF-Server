@@ -43,14 +43,14 @@ public class MatchPane extends GridPane implements Runnable {
 	private Thread thr = new Thread(this);
 	private long last = 0;
 	private Button start;
-	
+
 	/**
 	 * 
 	 */
 	public MatchPane() {
 		init();
 	}
-	
+
 	private void init() {
 		for (int y = 1; y < 5; y++) {
 			this.add(new Label("Player " + y), 0, y);
@@ -74,8 +74,10 @@ public class MatchPane extends GridPane implements Runnable {
 		this.add(start, 1, 5);
 		this.add(time, 2, 5);
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
@@ -83,15 +85,15 @@ public class MatchPane extends GridPane implements Runnable {
 		this.isRunning = true;
 		last = new Date().getTime();
 		long ne = 0;
-		while((ne = new Date().getTime()) < last + 360000) {
+		while ((ne = new Date().getTime()) < last + 360000) {
 			long delta = (last + 360000) - ne;
-			long min = (long)((double)delta / (double)60000);
-			long sec = (long)((double) (delta % 60000) / (double)1000);
+			long min = (long) ((double) delta / (double) 60000);
+			long sec = (long) ((double) (delta % 60000) / (double) 1000);
 			Platform.runLater(() -> {
 				this.time.setText("Time: " + min + "min " + sec + " sec");
 			});
 			try {
-				//Performance?
+				// Performance?
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -99,7 +101,7 @@ public class MatchPane extends GridPane implements Runnable {
 		}
 		onMatchFinished();
 	}
-		
+
 	@SuppressWarnings("deprecation")
 	private void onMatchFinished() {
 		ServerApp.sendToAll("match_end");
@@ -108,46 +110,52 @@ public class MatchPane extends GridPane implements Runnable {
 	}
 
 	public void killPlayer(String[] args, boolean b) {
-		ObservableList<Node> sorted = this.getChildren().filtered(nd -> {return nd instanceof PlayerLabel;});
-		if(args[0].equals("red")) {
+		ObservableList<Node> sorted = this.getChildren().filtered(nd -> {
+			return nd instanceof PlayerLabel;
+		});
+		if (args[0].equals("red")) {
 			sorted.get(Integer.valueOf(args[1]) - 1).setDisable(b);
 		} else {
 			sorted.get(Integer.valueOf(args[1]) + 3).setDisable(b);
 		}
 		boolean team_dead = true;
 		for (int i = 0; i < 4; i++) {
-			if(!sorted.get(i).isDisabled()) {
+			if (!sorted.get(i).isDisabled()) {
 				team_dead = false;
 				break;
 			}
 		}
-		if(team_dead) {
-			Alert alert = new Alert(AlertType.INFORMATION);
-			alert.setTitle("Match won!");
-			alert.setHeaderText("Red team has been eliminated!");
-			((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
-			alert.showAndWait();
-			onMatchFinished();
+		if (team_dead) {
+			Platform.runLater(() -> {
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.setTitle("Match won!");
+				alert.setHeaderText("Red team has been eliminated!");
+				((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
+				alert.showAndWait();
+				onMatchFinished();
+			});
 		}
 		team_dead = true;
 		for (int i = 4; i < 8; i++) {
-			if(!sorted.get(i).isDisabled()) {
+			if (!sorted.get(i).isDisabled()) {
 				team_dead = false;
 				break;
 			}
 		}
-		if(team_dead) {
-			Alert alert = new Alert(AlertType.INFORMATION);
-			alert.setTitle("Match won!");
-			alert.setHeaderText("Blue team has been eliminated!");
-			((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
-			alert.showAndWait();
-			onMatchFinished();
+		if (team_dead) {
+			Platform.runLater(() -> {
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.setTitle("Match won!");
+				alert.setHeaderText("Blue team has been eliminated!");
+				((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
+				alert.showAndWait();
+				onMatchFinished();
+			});
 		}
 	}
-	
+
 	public boolean fillWithJson(JSONObject json) {
-		if(this.isRunning) {
+		if (this.isRunning) {
 			Platform.runLater(() -> {
 				Alert alert = new Alert(AlertType.ERROR);
 				alert.setTitle("Can not load match!");
@@ -166,27 +174,27 @@ public class MatchPane extends GridPane implements Runnable {
 		JSONArray pred = jred.getJSONArray("players");
 		JSONArray pblue = jblue.getJSONArray("players");
 		int i = 1;
-		for(Object str : pred.toList()) {
-			this.add(new PlayerLabel(str.toString(), Color.RED) , 1, i);
+		for (Object str : pred.toList()) {
+			this.add(new PlayerLabel(str.toString(), Color.RED), 1, i);
 			i++;
 		}
 		i = 1;
-		for(Object str : pblue.toList()) {
+		for (Object str : pblue.toList()) {
 			this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
 			i++;
 		}
 		start.setDisable(false);
 		return true;
 	}
-		
+
 	public boolean isRunning() {
 		return isRunning;
 	}
-	
+
 	public boolean isLoaded() {
 		return isLoaded;
 	}
-	
+
 	public void start() {
 		thr.start();
 	}

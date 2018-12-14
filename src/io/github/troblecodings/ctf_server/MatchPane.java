@@ -196,6 +196,7 @@ public class MatchPane extends GridPane implements Runnable {
 	}
 
 	public void start() {
+		thr = new Thread(this);
 		thr.start();
 	}
 }

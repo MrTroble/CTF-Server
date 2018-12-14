@@ -53,10 +53,10 @@ public class SocketInput implements Runnable {
 					return;
 				}
 			}
-			ServerApp.LOGGER.println(socket + ": Admin access granted!");
+			ServerApp.LOGGER.println(socket + " Admin access granted!");
 			while (scanner.hasNextLine()) {
 				String input = scanner.nextLine();
-				ServerApp.LOGGER.println(socket + " send data " + input);
+				ServerApp.LOGGER.println(socket + " sendet " + input);
 				String command = input.split(" ")[0];
 				String arg = input.replaceFirst(command + " ", "");
 				processData(command, arg.split(":"));
@@ -72,6 +72,7 @@ public class SocketInput implements Runnable {
 	private void processData(String command, String[] args) throws Exception {
 		switch (command) {
 		case "disable":
+			if(!ServerApp.matchpane.isRunning())return;
 			ServerApp.sendToAll("lock " + args[0] + ":" + args[1]);
 			ServerApp.matchpane.killPlayer(args, true);
 			Timer tm = new Timer();

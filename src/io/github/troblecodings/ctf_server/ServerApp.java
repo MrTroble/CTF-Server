@@ -53,6 +53,7 @@ public class ServerApp extends Application implements Runnable{
 	public static MatchPane matchpane = new MatchPane();
 	public static Image ICON = new Image(ServerApp.class.getResourceAsStream("Icon.png"));
 	public static String SERVER_PW;
+	public static TextArea CONSOLE = new TextArea();
 	
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {
@@ -78,7 +79,7 @@ public class ServerApp extends Application implements Runnable{
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			LOGGER.println(sk + " sended to: " + nm);
+			LOGGER.println("Sendet " + sk + " " + nm);
 		}
 	}
 
@@ -235,6 +236,9 @@ public class ServerApp extends Application implements Runnable{
 		matchpane.setPrefSize(485, 285);
 		matchpane.setPadding(new Insets(15));
 		root.add(matchpane, 0, 1);
+		
+		CONSOLE.setEditable(false);
+		root.add(CONSOLE, 1, 1);
 		
 		updatePlanList();
 		plans.setPrefSize(500, 300);

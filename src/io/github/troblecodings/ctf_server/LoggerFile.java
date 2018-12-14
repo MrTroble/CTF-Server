@@ -50,6 +50,7 @@ public class LoggerFile extends PrintStream {
 	public void write(byte[] buf, int off, int len) {
 		super.write(buf, off, len);
 		System.out.write(buf, off, len);
+		ServerApp.CONSOLE.appendText(new String(buf, off, len));
 		this.flush();
 	}
 

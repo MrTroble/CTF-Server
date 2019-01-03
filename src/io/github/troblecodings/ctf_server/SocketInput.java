@@ -17,7 +17,9 @@
 package io.github.troblecodings.ctf_server;
 
 import java.net.Socket;
-import java.util.*;
+import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @author MrTroble
@@ -72,16 +74,15 @@ public class SocketInput implements Runnable {
 	private void processData(String command, String[] args) throws Exception {
 		switch (command) {
 		case "disable":
-			if(!ServerApp.matchpane.isRunning())return;
 			ServerApp.sendToAll("lock " + args[0] + ":" + args[1]);
-			ServerApp.matchpane.killPlayer(args, true);
+			ServerApp.root.fireEvent(new KillEvent(args, true));
 			Timer tm = new Timer();
 			tm.schedule(new TimerTask() {
 				
 				@Override
 				public void run() {
 					try {
-						ServerApp.matchpane.killPlayer(args, false);
+						ServerApp.root.fireEvent(new KillEvent(args, false));
 						ServerApp.sendToAll("unlock " + args[0] + ":" + args[1]);
 					} catch (Exception e) {
 						e.printStackTrace();

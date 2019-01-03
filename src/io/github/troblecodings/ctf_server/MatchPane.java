@@ -16,15 +16,24 @@
 
 package io.github.troblecodings.ctf_server;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Date;
 
-import org.json.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -55,9 +64,56 @@ public class MatchPane extends GridPane implements Runnable {
 		for (int y = 1; y < 5; y++) {
 			this.add(new Label("Player " + y), 0, y);
 		}
+		
+		this.addEventHandler(KillEvent.KILL_EVENT_TYPE, evt ->{
+			this.killPlayer(evt.args, evt.kill);
+		});
+
 		this.add(team_a, 1, 0);
 		this.add(team_b, 2, 0);
 		Button stop = new Button("Stop");
+		Button load = new Button("Load");
+		load.setOnAction(evt -> {
+			Dialog<String> dialog = new Dialog<String>();
+			ListView<Label> plans = new ListView<Label>();
+			plans.setPrefSize(500, 300);
+			dialog.getDialogPane().setContent(plans);
+			dialog.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.CANCEL);
+			dialog.setResultConverter(bt ->  {
+				if(bt.equals(ButtonType.APPLY))return plans.getSelectionModel().getSelectedItem().getText();
+				return null;
+			});
+			ObservableList<Label> itms = plans.getItems();
+			itms.clear();
+			itms.add(new Label("List of matches"));
+
+			try {
+				Files.list(ServerApp.path_plan).filter(pth -> {return Files.isRegularFile(pth) && pth.toString().endsWith(".json");}).forEach(pth -> {
+					Label lab = new Label(pth.getFileName().toString().replace(".json", ""));
+					itms.add(lab);
+				});
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			dialog.showAndWait().ifPresent(stri -> {
+				Alert alert = new Alert(AlertType.CONFIRMATION);
+				alert.setTitle("Load?");
+				alert.setHeaderText("Do you want to load this match?");
+				alert.setContentText("Match: " + stri);
+				((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
+				alert.showAndWait().ifPresent(tp -> {
+					if(tp == ButtonType.OK) {
+						try {
+							String str = new String(Files.readAllBytes(Paths.get(ServerApp.path_plan.toString(), stri + ".json")));
+							JSONObject obj = new JSONObject(str);
+							if(this.fillWithJson(obj)) {}
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				});;
+			});
+		});
 		start = new Button("Start");
 		start.setOnAction(evn -> {
 			start.setDisable(true);
@@ -70,6 +126,7 @@ public class MatchPane extends GridPane implements Runnable {
 			this.onMatchFinished();
 		});
 		stop.setDisable(true);
+		this.add(load, 0, 0);
 		this.add(stop, 0, 5);
 		this.add(start, 1, 5);
 		this.add(time, 2, 5);

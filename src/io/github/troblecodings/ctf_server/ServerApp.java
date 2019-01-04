@@ -20,7 +20,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -193,15 +192,6 @@ public class ServerApp extends Application implements Runnable {
 				players.add(new PlayerField(x == 1, y), x, y);
 			}
 		}
-		Button btn = new Button("Change");
-		btn.setOnAction(ev -> {
-			players.getChildren().filtered(nd -> {
-				return nd instanceof PlayerField;
-			}).forEach(nd -> {
-				((TextField) nd).onActionProperty().getValue().handle(new ActionEvent());
-			});
-		});
-		players.add(btn, 1, 5);
 
 		Button setup = new Button("New");
 		setup.setOnAction(ev -> {
@@ -266,14 +256,14 @@ public class ServerApp extends Application implements Runnable {
 		players.add(setup, 0, 5);
 
 		root.add(players, 0, 0);
-		MatchPane matchpane = new MatchPane();
+		MatchPane matchpane = new MatchPane(0);
 		matchpane.setHgap(15);
 		matchpane.setVgap(15);
 		matchpane.setPrefSize(485, 285);
 		matchpane.setPadding(new Insets(15));
 		root.add(matchpane, 0, 1);
 
-		MatchPane matchpane2 = new MatchPane();
+		MatchPane matchpane2 = new MatchPane(1);
 		matchpane2.setHgap(15);
 		matchpane2.setVgap(15);
 		matchpane2.setPrefSize(485, 285);

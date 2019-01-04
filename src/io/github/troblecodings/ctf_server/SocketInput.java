@@ -74,21 +74,24 @@ public class SocketInput implements Runnable {
 	private void processData(String command, String[] args) throws Exception {
 		switch (command) {
 		case "disable":
-			ServerApp.sendToAll("lock " + args[0] + ":" + args[1]);
-			ServerApp.root.fireEvent(new KillEvent(args, true));
+			MatchPane.MATCHES.get(Integer.valueOf(args[2])).killPlayer(args, true);;
+			ServerApp.sendToAll("lock " + args[0] + ":" + args[1] + ":" + args[2]);
 			Timer tm = new Timer();
 			tm.schedule(new TimerTask() {
 				
 				@Override
 				public void run() {
 					try {
-						ServerApp.root.fireEvent(new KillEvent(args, false));
-						ServerApp.sendToAll("unlock " + args[0] + ":" + args[1]);
+						MatchPane.MATCHES.get(Integer.valueOf(args[2])).killPlayer(args, false);;
+						ServerApp.sendToAll("unlock " + args[0] + ":" + args[1] + ":" + args[2]);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}					
 				}
 			}, 10000);
+			break;
+		case "match_end":
+			MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).onMatchFinished(args[0] + ":");
 			break;
 		}
 	}

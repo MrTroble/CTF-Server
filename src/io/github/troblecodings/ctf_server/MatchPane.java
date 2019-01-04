@@ -18,8 +18,10 @@ package io.github.troblecodings.ctf_server;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.HashMap;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,6 +46,8 @@ import javafx.stage.Stage;
  */
 public class MatchPane extends GridPane implements Runnable {
 
+	public static HashMap<Integer, MatchPane> MATCHES = new HashMap<Integer, MatchPane>();
+	
 	private Label team_a = new Label("Team Red");
 	private Label team_b = new Label("Team Blue");
 	private Label time = new Label("Time: 0");
@@ -52,11 +56,15 @@ public class MatchPane extends GridPane implements Runnable {
 	private Thread thr = new Thread(this);
 	private long last = 0;
 	private Button start;
+	private Path loaded_file;
+	private int matchid;
 
 	/**
-	 * 
+	 * @param id
 	 */
-	public MatchPane() {
+	public MatchPane(int matchid) {
+		this.matchid = matchid;
+		MATCHES.put(matchid, this);
 		init();
 	}
 
@@ -65,10 +73,6 @@ public class MatchPane extends GridPane implements Runnable {
 			this.add(new Label("Player " + y), 0, y);
 		}
 		
-		this.addEventHandler(KillEvent.KILL_EVENT_TYPE, evt ->{
-			this.killPlayer(evt.args, evt.kill);
-		});
-
 		this.add(team_a, 1, 0);
 		this.add(team_b, 2, 0);
 		Button stop = new Button("Stop");
@@ -78,6 +82,7 @@ public class MatchPane extends GridPane implements Runnable {
 			ListView<Label> plans = new ListView<Label>();
 			plans.setPrefSize(500, 300);
 			dialog.getDialogPane().setContent(plans);
+			((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 			dialog.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.CANCEL);
 			dialog.setResultConverter(bt ->  {
 				if(bt.equals(ButtonType.APPLY))return plans.getSelectionModel().getSelectedItem().getText();
@@ -104,7 +109,8 @@ public class MatchPane extends GridPane implements Runnable {
 				alert.showAndWait().ifPresent(tp -> {
 					if(tp == ButtonType.OK) {
 						try {
-							String str = new String(Files.readAllBytes(Paths.get(ServerApp.path_plan.toString(), stri + ".json")));
+							loaded_file = Paths.get(ServerApp.path_plan.toString(), stri + ".json");
+							String str = new String(Files.readAllBytes(loaded_file));
 							JSONObject obj = new JSONObject(str);
 							if(this.fillWithJson(obj)) {}
 						} catch (IOException e) {
@@ -123,7 +129,7 @@ public class MatchPane extends GridPane implements Runnable {
 		start.setDisable(true);
 		stop.setOnAction(ev -> {
 			stop.setDisable(true);
-			this.onMatchFinished();
+			this.isRunning = false;
 		});
 		stop.setDisable(true);
 		this.add(load, 0, 0);
@@ -140,6 +146,7 @@ public class MatchPane extends GridPane implements Runnable {
 	@Override
 	public void run() {
 		this.isRunning = true;
+		ServerApp.sendToAll("match_start " + matchid);
 		last = new Date().getTime();
 		long ne = 0;
 		while ((ne = new Date().getTime()) < last + 360000) {
@@ -156,14 +163,23 @@ public class MatchPane extends GridPane implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		onMatchFinished();
+		onMatchFinished("time:");
 	}
 
 	@SuppressWarnings("deprecation")
-	private void onMatchFinished() {
-		ServerApp.sendToAll("match_end");
-		thr.stop();
+	public void onMatchFinished(String rs) {
 		this.isRunning = false;
+		ServerApp.sendToAll("match_end " + rs + matchid);
+		thr.stop();
+		Platform.runLater(() -> {
+			this.time.setText("End");
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Match end!");
+			if(rs != "time:")alert.setHeaderText((rs == "blue_win:" ? "Blue":"Red") + " has won the match on field " + matchid);
+			else alert.setHeaderText("Time has run out on field " + matchid);
+			((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
+			alert.show();
+		});
 	}
 
 	public void killPlayer(String[] args, boolean b) {
@@ -183,14 +199,7 @@ public class MatchPane extends GridPane implements Runnable {
 			}
 		}
 		if (team_dead) {
-			Platform.runLater(() -> {
-				Alert alert = new Alert(AlertType.INFORMATION);
-				alert.setTitle("Match won!");
-				alert.setHeaderText("Red team has been eliminated!");
-				((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
-				alert.showAndWait();
-				onMatchFinished();
-			});
+			onMatchFinished("blue_win:");
 		}
 		team_dead = true;
 		for (int i = 4; i < 8; i++) {
@@ -200,14 +209,7 @@ public class MatchPane extends GridPane implements Runnable {
 			}
 		}
 		if (team_dead) {
-			Platform.runLater(() -> {
-				Alert alert = new Alert(AlertType.INFORMATION);
-				alert.setTitle("Match won!");
-				alert.setHeaderText("Blue team has been eliminated!");
-				((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
-				alert.showAndWait();
-				onMatchFinished();
-			});
+			onMatchFinished("red_win:");
 		}
 	}
 
@@ -233,11 +235,13 @@ public class MatchPane extends GridPane implements Runnable {
 		int i = 1;
 		for (Object str : pred.toList()) {
 			this.add(new PlayerLabel(str.toString(), Color.RED), 1, i);
+			ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + ":" + matchid);
 			i++;
 		}
 		i = 1;
 		for (Object str : pblue.toList()) {
 			this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
+			ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + ":" + matchid);
 			i++;
 		}
 		start.setDisable(false);

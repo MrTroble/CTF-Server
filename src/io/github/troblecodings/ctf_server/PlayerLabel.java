@@ -23,7 +23,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 /**
- * @author n.froehlich
+ * @author MrTroble
  *
  */
 public class PlayerLabel extends Label {

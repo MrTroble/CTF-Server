@@ -35,7 +35,7 @@ public class PlayerField extends TextField implements EventHandler<ActionEvent>{
 	public PlayerField(boolean team, int index) {
 		this.team = team? "red":"blue";
 		this.index = index;
-		this.setText(this.team + ":" + index);
+		this.setText(this.team + index);
 		this.setOnAction(this);
 	}
 

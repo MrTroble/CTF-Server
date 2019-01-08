@@ -50,6 +50,9 @@ public class LoggerFile extends PrintStream {
 	public void write(byte[] buf, int off, int len) {
 		super.write(buf, off, len);
 		System.out.write(buf, off, len);
+		if(ServerApp.CONSOLE.getText().split(System.lineSeparator()).length > 2000) {
+			ServerApp.CONSOLE.clear();
+		}
 		ServerApp.CONSOLE.appendText(new String(buf, off, len));
 		this.flush();
 	}

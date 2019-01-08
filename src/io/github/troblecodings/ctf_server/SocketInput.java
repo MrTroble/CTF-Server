@@ -43,6 +43,7 @@ public class SocketInput implements Runnable {
 	 * 
 	 * @see java.lang.Runnable#run()
 	 */
+	@SuppressWarnings("resource")
 	@Override
 	public void run() {
 		try {
@@ -50,7 +51,6 @@ public class SocketInput implements Runnable {
 			if(scanner.hasNextLine()) {
 				String str = scanner.nextLine();
 				if(!str.equals(ServerApp.SERVER_PW)) {
-					scanner.close();
 					ServerApp.LOGGER.println(socket + " Wrong admin password! Using as reciver!");
 					return;
 				}

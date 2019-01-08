@@ -16,6 +16,7 @@
 
 package io.github.troblecodings.ctf_server;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,7 +59,8 @@ public class MatchPane extends GridPane implements Runnable {
 	private Button start;
 	private Path loaded_file;
 	private int matchid;
-
+	private JSONObject cmatch;
+	
 	/**
 	 * @param id
 	 */
@@ -171,11 +173,24 @@ public class MatchPane extends GridPane implements Runnable {
 		this.isRunning = false;
 		ServerApp.sendToAll("match_end " + rs + matchid);
 		thr.stop();
+		try {
+			ServerApp.LOGGER.println(rs.replace(":", ""));
+			cmatch.getJSONObject("1").put("result", rs.replace(":", "").equals("red_win") ? 1:0);
+			cmatch.getJSONObject("2").put("result", rs.replace(":", "").equals("blue_win") ? 1:0);
+			Path pth = Paths.get(ServerApp.path_history.toString(), team_a.getText() + " vs " + team_b.getText() + ".json");
+			if(Files.exists(pth))Files.delete(pth);
+			BufferedWriter writer = Files.newBufferedWriter(Files.createFile(pth));
+			cmatch.write(writer);
+			writer.flush();
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		Platform.runLater(() -> {
 			this.time.setText("End");
 			Alert alert = new Alert(AlertType.INFORMATION);
 			alert.setTitle("Match end!");
-			if(rs != "time:")alert.setHeaderText((rs == "blue_win:" ? "Blue":"Red") + " has won the match on field " + matchid);
+			if(rs != "time:")alert.setHeaderText((rs.replace(":", "").equals("blue_win") ? "Blue":"Red") + " has won the match on field " + matchid);
 			else alert.setHeaderText("Time has run out on field " + matchid);
 			((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 			alert.show();
@@ -224,6 +239,7 @@ public class MatchPane extends GridPane implements Runnable {
 			});
 			return false;
 		}
+		this.cmatch = json;
 		this.getChildren().clear();
 		this.init();
 		JSONObject jred = (JSONObject) json.getJSONObject("1");

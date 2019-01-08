@@ -63,7 +63,7 @@ public class ServerApp extends Application implements Runnable {
 	public static ArrayList<Socket> sockets = new ArrayList<>();
 	public static ExecutorService service;
 	public static Path path_plan = Paths.get("game_plans");
-	private static Path path_history = Paths.get("match_history");
+	public static Path path_history = Paths.get("match_history");
 	private static Path path_log = Paths.get("logs");
 	public static Image ICON = new Image(ServerApp.class.getResourceAsStream("Icon.png"));
 	public static String SERVER_PW;
@@ -131,6 +131,10 @@ public class ServerApp extends Application implements Runnable {
 		config.setResultConverter(tp -> {
 			if (tp == ButtonType.APPLY)
 				return new Pair<String, String>(port.getText(), pw.getText());
+			if(tp == ButtonType.CANCEL) {
+				LOGGER.println("ERROR! Not configured! Exiting!");
+				System.exit(-1);
+			}
 			return null;
 		});
 		((Stage) config.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
@@ -153,6 +157,7 @@ public class ServerApp extends Application implements Runnable {
 		root = new GridPane();
 		Scene sc = new Scene(root, 1000, 600);
 		primaryStage.setScene(sc);
+		primaryStage.setTitle("CTF Server App");
 		primaryStage.setResizable(false);
 		primaryStage.getIcons().add(ICON);
 		primaryStage.setOnCloseRequest(ev -> {
@@ -212,6 +217,7 @@ public class ServerApp extends Application implements Runnable {
 			ButtonType type = new ButtonType("Create");
 			alert.getDialogPane().getButtonTypes().addAll(type, ButtonType.CANCEL);
 			alert.getDialogPane().setContent(pane);
+			((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 			alert.setResultConverter(tp -> {
 				if (tp == type)
 					return new Pair<String, String>(red.getText(), blue.getText());

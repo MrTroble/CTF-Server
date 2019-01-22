@@ -190,8 +190,8 @@ public class MatchPane extends GridPane implements Runnable {
 		thr.stop();
 		try {
 			ServerApp.LOGGER.println(rs.replace(":", ""));
-			cmatch.getJSONObject("1").put("result", rs.replace(":", "").equals("red_win") ? 1:0);
-			cmatch.getJSONObject("2").put("result", rs.replace(":", "").equals("blue_win") ? 1:0);
+			cmatch.getJSONObject("1").put("result", rs.replace(":", "").equals("red_win") ? 2:0);
+			cmatch.getJSONObject("2").put("result", rs.replace(":", "").equals("blue_win") ? 2:0);
 			Path pth = Paths.get(ServerApp.path_history.toString(), team_a.getText() + " vs " + team_b.getText() + ".json");
 			if(Files.exists(pth))Files.delete(pth);
 			BufferedWriter writer = Files.newBufferedWriter(Files.createFile(pth));

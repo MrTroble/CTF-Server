@@ -21,6 +21,8 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javafx.event.ActionEvent;
+
 /**
  * @author MrTroble
  *
@@ -93,6 +95,12 @@ public class SocketInput implements Runnable {
 		case "match_end":
 			MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).onMatchFinished(args[0] + ":");
 			break;
+		case "match_pause":
+			ServerApp.sendToAll("match_pause " + Integer.valueOf(args[args.length - 1]));
+			MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).stop.getOnAction().handle(new ActionEvent());
+			break;
+		case "foul":
+			
 		}
 	}
 

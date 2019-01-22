@@ -52,11 +52,10 @@ public class MatchPane extends GridPane implements Runnable {
 	private Label team_a = new Label("Team Red");
 	private Label team_b = new Label("Team Blue");
 	private Label time = new Label("Time: 0");
-	private boolean isRunning = false;
-	private boolean isLoaded = false;
+	private boolean isRunning = false,isPause = false, isLoaded = false;
 	private Thread thr = new Thread(this);
 	private long last = 0;
-	private Button start;
+	public Button start, stop = new Button("Pause");
 	private Path loaded_file;
 	private int matchid;
 	private JSONObject cmatch;
@@ -77,7 +76,6 @@ public class MatchPane extends GridPane implements Runnable {
 		
 		this.add(team_a, 1, 0);
 		this.add(team_b, 2, 0);
-		Button stop = new Button("Stop");
 		Button load = new Button("Load");
 		load.setOnAction(evt -> {
 			Dialog<String> dialog = new Dialog<String>();
@@ -125,13 +123,18 @@ public class MatchPane extends GridPane implements Runnable {
 		start = new Button("Start");
 		start.setOnAction(evn -> {
 			start.setDisable(true);
-			this.start();
+			if(!this.isPause)this.start();
+			else ServerApp.sendToAll("match_unpause " + matchid);
+			last = new Date().getTime();
+			this.isPause = false;
 			stop.setDisable(false);
 		});
 		start.setDisable(true);
 		stop.setOnAction(ev -> {
 			stop.setDisable(true);
-			this.isRunning = false;
+			start.setDisable(false);
+			ServerApp.sendToAll("match_pause " + matchid);
+			this.isPause = true;
 		});
 		stop.setDisable(true);
 		this.add(load, 0, 0);
@@ -151,8 +154,20 @@ public class MatchPane extends GridPane implements Runnable {
 		ServerApp.sendToAll("match_start " + matchid);
 		last = new Date().getTime();
 		long ne = 0;
-		while ((ne = new Date().getTime()) < last + 360000) {
-			long delta = (last + 360000) - ne;
+		long delta = 240000;
+		while (delta > 0) {
+			if(this.isPause) {
+				try {
+					// Performance?
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				continue;
+			}
+			ne = new Date().getTime();
+			delta -= ne - last;
+			last = ne;
 			long min = (long) ((double) delta / (double) 60000);
 			long sec = (long) ((double) (delta % 60000) / (double) 1000);
 			Platform.runLater(() -> {

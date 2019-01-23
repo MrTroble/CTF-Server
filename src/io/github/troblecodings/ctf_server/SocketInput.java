@@ -16,11 +16,12 @@
 
 package io.github.troblecodings.ctf_server;
 
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.nio.file.*;
+import java.util.*;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 
 /**
@@ -30,6 +31,8 @@ import javafx.event.ActionEvent;
 public class SocketInput implements Runnable {
 
 	private Socket socket;
+	public static Path STRIKES = Paths.get("strikes.txt");
+	public static Path BANS = Paths.get("bans.txt");
 
 	/**
 	 * Thread runnable for coherent input detection
@@ -50,13 +53,18 @@ public class SocketInput implements Runnable {
 	public void run() {
 		try {
 			Scanner scanner = new Scanner(socket.getInputStream());
-			if(scanner.hasNextLine()) {
+			PrintWriter writer = new PrintWriter(socket.getOutputStream());
+			if (scanner.hasNextLine()) {
 				String str = scanner.nextLine();
-				if(!str.equals(ServerApp.SERVER_PW)) {
+				if (!str.equals(ServerApp.SERVER_PW)) {
 					ServerApp.LOGGER.println(socket + " Wrong admin password! Using as reciver!");
+					writer.println("motd " + ServerApp.MOTD + "%n(Wrong password -> you are a reciver)");
+					writer.flush();
 					return;
 				}
 			}
+			writer.println("motd " + ServerApp.MOTD);
+			writer.flush();
 			ServerApp.LOGGER.println(socket + " Admin access granted!");
 			while (scanner.hasNextLine()) {
 				String input = scanner.nextLine();
@@ -74,33 +82,62 @@ public class SocketInput implements Runnable {
 	}
 
 	private void processData(String command, String[] args) throws Exception {
-		switch (command) {
-		case "disable":
-			MatchPane.MATCHES.get(Integer.valueOf(args[2])).killPlayer(args, true);;
-			ServerApp.sendToAll("lock " + args[0] + ":" + args[1] + ":" + args[2]);
-			Timer tm = new Timer();
-			tm.schedule(new TimerTask() {
-				
-				@Override
-				public void run() {
-					try {
-						MatchPane.MATCHES.get(Integer.valueOf(args[2])).killPlayer(args, false);;
-						ServerApp.sendToAll("unlock " + args[0] + ":" + args[1] + ":" + args[2]);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}					
+		try {
+			switch (command) {
+			case "disable":
+				ServerApp.sendToAll("lock " + args[0] + ":" + args[1] + ":" + args[2]);
+				Timer tm = new Timer();
+				tm.schedule(new TimerTask() {
+
+					@Override
+					public void run() {
+						try {
+							Platform.runLater(() -> {
+								MatchPane.MATCHES.get(Integer.valueOf(args[2])).killPlayer(args, false);
+							});
+							ServerApp.sendToAll("unlock " + args[0] + ":" + args[1] + ":" + args[2]);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}, 10000);
+				Platform.runLater(() -> {
+					MatchPane.MATCHES.get(Integer.valueOf(args[2])).killPlayer(args, true);
+				});
+				break;
+			case "match_end":
+				if (args.length < 1)
+					return;
+				Platform.runLater(() -> {
+					MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).onMatchFinished(args[0] + ":");
+				});
+				break;
+			case "match_pause":
+				if (args.length < 1)
+					return;
+				ServerApp.sendToAll("match_pause " + Integer.valueOf(args[args.length - 1]));
+				Platform.runLater(() -> {
+					MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).stop.getOnAction()
+							.handle(new ActionEvent());
+				});
+				break;
+			case "foul":
+				for (String str : Files.readAllLines(STRIKES)) {
+					System.out.println(args[2].replace(" (S)", ""));
+					if (str.replace(" (S)", "").equals(args[2].replace(" (S)", ""))) {
+						ServerApp.sendToAll("ban " + args[0] + ":" + args[1] + ":" + args[3]);
+						try {
+							Files.write(BANS, (str + System.lineSeparator()).getBytes(), StandardOpenOption.APPEND);
+						} catch (Exception ex) {
+						}
+						return;
+					}
 				}
-			}, 10000);
-			break;
-		case "match_end":
-			MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).onMatchFinished(args[0] + ":");
-			break;
-		case "match_pause":
-			ServerApp.sendToAll("match_pause " + Integer.valueOf(args[args.length - 1]));
-			MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).stop.getOnAction().handle(new ActionEvent());
-			break;
-		case "foul":
-			
+				Files.write(STRIKES, (args[2] + System.lineSeparator()).getBytes(), StandardOpenOption.APPEND);
+				ServerApp.sendToAll("set_name " + args[0] + ":" + args[1] + ":" + args[2] + " (S):" + args[3]);
+				break;
+			}
+		} catch (Exception e) {
 		}
 	}
 

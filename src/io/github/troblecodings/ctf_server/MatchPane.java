@@ -18,9 +18,7 @@ package io.github.troblecodings.ctf_server;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -154,7 +152,7 @@ public class MatchPane extends GridPane implements Runnable {
 		ServerApp.sendToAll("match_start " + matchid);
 		last = new Date().getTime();
 		long ne = 0;
-		long delta = 240000;
+		long delta = ServerApp.MINS * 60000;
 		while (delta > 0) {
 			if(this.isPause) {
 				try {
@@ -264,13 +262,45 @@ public class MatchPane extends GridPane implements Runnable {
 		JSONArray pred = jred.getJSONArray("players");
 		JSONArray pblue = jblue.getJSONArray("players");
 		int i = 1;
-		for (Object str : pred.toList()) {
+		red: for (Object str : pred.toList()) {
+			try {
+				for (String ins : Files.readAllLines(SocketInput.BANS)) {
+					if (str.toString().replace(" (S)", "").equals(ins.replace(" (S)", ""))) {
+						ServerApp.sendToAll("ban " + i + ":" + matchid);
+						continue red;
+					}
+				}
+				for (String ins : Files.readAllLines(SocketInput.STRIKES)) {
+					if (str.toString().replace(" (S)", "").equals(ins.replace(" (S)", ""))) {
+						ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + " (S):" + matchid);
+						continue red;
+					}
+				}
+			} catch (IOException e) {
+			}
 			this.add(new PlayerLabel(str.toString(), Color.RED), 1, i);
 			ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + ":" + matchid);
 			i++;
 		}
 		i = 1;
-		for (Object str : pblue.toList()) {
+		blue: for (Object str : pblue.toList()) {
+			try {
+				for (String ins : Files.readAllLines(SocketInput.BANS)) {
+					if (str.toString().replace(" (S)", "").equals(ins.replace(" (S)", ""))) {
+						ServerApp.sendToAll("ban " + i + ":" + matchid);
+						this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
+						continue blue;
+					}
+				}
+				for (String ins : Files.readAllLines(SocketInput.STRIKES)) {
+					if (str.toString().replace(" (S)", "").equals(ins.replace(" (S)", ""))) {
+						this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
+						ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + " (S):" + matchid);
+						continue blue;
+					}
+				}
+			} catch (IOException e) {
+			}
 			this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
 			ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + ":" + matchid);
 			i++;

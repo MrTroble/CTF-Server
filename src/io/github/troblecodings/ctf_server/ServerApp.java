@@ -1,36 +1,18 @@
 package io.github.troblecodings.ctf_server;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.io.*;
+import java.net.*;
+import java.nio.file.*;
+import java.util.*;
+import java.util.concurrent.*;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.*;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
@@ -66,7 +48,8 @@ public class ServerApp extends Application implements Runnable {
 	public static Path path_history = Paths.get("match_history");
 	private static Path path_log = Paths.get("logs");
 	public static Image ICON = new Image(ServerApp.class.getResourceAsStream("Icon.png"));
-	public static String SERVER_PW;
+	public static String SERVER_PW, MOTD;
+	public static int MINS = 3;
 	public static TextArea CONSOLE = new TextArea();
 	public static GridPane root;
 
@@ -82,6 +65,10 @@ public class ServerApp extends Application implements Runnable {
 			Files.createDirectory(path_plan);
 		if (!Files.exists(path_history))
 			Files.createDirectory(path_history);
+		if (!Files.exists(SocketInput.STRIKES))
+			Files.createFile(SocketInput.STRIKES);
+		if (!Files.exists(SocketInput.BANS))
+			Files.createFile(SocketInput.BANS);
 		launch(args);
 	}
 
@@ -117,11 +104,18 @@ public class ServerApp extends Application implements Runnable {
 
 		configpane.add(new Label("Port"), 0, 0);
 		configpane.add(new Label("Password"), 0, 1);
+		configpane.add(new Label("Time in min"), 0, 2);
+		configpane.add(new Label("Motd"), 0, 3);
 
-		TextField port = new TextField("555");
+		Numberfield port = new Numberfield("555");
+		Numberfield time = new Numberfield("4");
+		TextField motd = new TextField("Welcome to the server!%nWait for match!");
 		PasswordField pw = new PasswordField();
+		
 		configpane.add(port, 1, 0);
 		configpane.add(pw, 1, 1);
+		configpane.add(time, 1, 2);
+		configpane.add(motd, 1, 3);
 		configpane.setVgap(15);
 		configpane.setHgap(15);
 		configpane.setPadding(new Insets(15));
@@ -141,6 +135,8 @@ public class ServerApp extends Application implements Runnable {
 		config.showAndWait().ifPresent(str -> {
 			try {
 				PORT = Integer.valueOf(str.getKey());
+				MINS = Integer.valueOf(time.getText());
+				MOTD = motd.getText();
 			} catch (Throwable t) {
 				LOGGER.println("Wrong port configuration!");
 			}

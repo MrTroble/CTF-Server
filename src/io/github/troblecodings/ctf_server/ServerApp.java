@@ -49,7 +49,7 @@ public class ServerApp extends Application implements Runnable {
 	private static Path path_log = Paths.get("logs");
 	public static Image ICON = new Image(ServerApp.class.getResourceAsStream("Icon.png"));
 	public static String SERVER_PW, MOTD;
-	public static int MINS = 3;
+	public static int MINS = 2;
 	public static TextArea CONSOLE = new TextArea();
 	public static GridPane root;
 	public static FileServer server;
@@ -107,7 +107,7 @@ public class ServerApp extends Application implements Runnable {
 		configpane.add(new Label("Motd"), 0, 3);
 
 		Numberfield port = new Numberfield("555");
-		Numberfield time = new Numberfield("4");
+		Numberfield time = new Numberfield("2");
 		TextField motd = new TextField("Welcome to the server!%nWait for match!");
 		PasswordField pw = new PasswordField();
 		
@@ -150,7 +150,7 @@ public class ServerApp extends Application implements Runnable {
 		});
 
 		root = new GridPane();
-		Scene sc = new Scene(root, 1000, 600);
+		Scene sc = new Scene(root, 1000, 650);
 		primaryStage.setScene(sc);
 		primaryStage.setTitle("CTF Server App");
 		primaryStage.setResizable(false);

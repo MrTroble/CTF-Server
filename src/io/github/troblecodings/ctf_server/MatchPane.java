@@ -70,6 +70,8 @@ public class MatchPane extends GridPane implements Runnable {
 		for (int y = 1; y < 5; y++) {
 			this.add(new Label("Player " + y), 0, y);
 		}
+		this.add(new Label("Reserve 1"), 0, 5);
+		this.add(new Label("Reserve 2"), 0, 6);
 
 		this.add(team_a, 1, 0);
 		this.add(team_b, 2, 0);
@@ -142,9 +144,9 @@ public class MatchPane extends GridPane implements Runnable {
 		});
 		stop.setDisable(true);
 		this.add(load, 0, 0);
-		this.add(stop, 0, 5);
-		this.add(start, 1, 5);
-		this.add(time, 2, 5);
+		this.add(stop, 0, 7);
+		this.add(start, 1, 7);
+		this.add(time, 2, 7);
 	}
 
 	/*
@@ -194,13 +196,18 @@ public class MatchPane extends GridPane implements Runnable {
 		thr.stop();
 		try {
 			ServerApp.LOGGER.println(rs.replace(":", ""));
-			cmatch.getJSONObject("1").put("result", rs.replace(":", "").equals("red_win") ? 2 : 0);
-			cmatch.getJSONObject("2").put("result", rs.replace(":", "").equals("blue_win") ? 2 : 0);
 			Path pth = Paths.get(ServerApp.path_history.toString(),
 					team_a.getText() + " vs " + team_b.getText() + ".json");
-			if (Files.exists(pth))
-				Files.delete(pth);
-			BufferedWriter writer = Files.newBufferedWriter(Files.createFile(pth));
+			int rs1 = rs.replace(":", "").equals("red_win") ? 3 : 0;
+			int rs2 = rs.replace(":", "").equals("blue_win") ? 3 : 0;
+			if (Files.exists(pth)){
+				JSONObject obj = new JSONObject(new String(Files.readAllBytes(pth)));
+				rs1 += obj.getJSONObject("1").getInt("result");
+				rs2 += obj.getJSONObject("2").getInt("result");
+			} else Files.createFile(pth);
+			cmatch.getJSONObject("1").put("result", rs1);
+			cmatch.getJSONObject("2").put("result", rs2);
+			BufferedWriter writer = Files.newBufferedWriter(pth);
 			cmatch.write(writer);
 			writer.flush();
 			writer.close();
@@ -285,7 +292,7 @@ public class MatchPane extends GridPane implements Runnable {
 			for (String ins : bans) {
 				if (ins.equals(str.toString())) {
 					this.add(new PlayerLabel(), 1, i);
-					ServerApp.sendToAll("ban " + "red:" + i + ":" + matchid);
+					if(i < 5)ServerApp.sendToAll("ban " + "red:" + i + ":" + matchid);
 					i++;
 					continue red;
 				}
@@ -293,13 +300,13 @@ public class MatchPane extends GridPane implements Runnable {
 			for (String ins : strikes) {
 				if (str.toString().equals(ins)) {
 					this.add(new PlayerLabel( "red", i, matchid, str.toString() + " (S)", Color.RED), 1, i);
-					ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + " (S):" + matchid);			
+					if(i < 5)ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + " (S):" + matchid);			
 					i++;
 					continue red;
 				}
 			}
 			this.add(new PlayerLabel("red", i, matchid, str.toString(), Color.RED), 1, i);
-			ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + ":" + matchid);
+			if(i < 5)ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + ":" + matchid);
 			i++;
 		}
 		i = 1;
@@ -307,7 +314,7 @@ public class MatchPane extends GridPane implements Runnable {
 			for (String ins : bans) {
 				if (ins.equals(str.toString())) {
 					this.add(new PlayerLabel(), 2, i);
-					ServerApp.sendToAll("ban " + "blue:" + i + ":" + matchid);
+					if(i < 5)ServerApp.sendToAll("ban " + "blue:" + i + ":" + matchid);
 					i++;
 					continue blue;
 				}
@@ -315,13 +322,13 @@ public class MatchPane extends GridPane implements Runnable {
 			for (String ins : strikes) {
 				if (str.toString().equals(ins)) {
 					this.add(new PlayerLabel("blue", i, matchid, str.toString() + " (S)", Color.AQUA), 2, i);
-					ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + " (S):" + matchid);			
+					if(i < 5)ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + " (S):" + matchid);			
 					i++;
 					continue blue;
 				}
 			}
 			this.add(new PlayerLabel("blue", i, matchid, str.toString(), Color.AQUA), 2, i);
-			ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + ":" + matchid);
+			if(i < 5)ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + ":" + matchid);
 			i++;
 		}
 		start.setDisable(false);

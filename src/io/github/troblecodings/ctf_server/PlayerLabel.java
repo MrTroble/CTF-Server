@@ -29,6 +29,8 @@ import javafx.scene.text.Font;
  */
 public class PlayerLabel extends Label {
 
+	private static PlayerLabel changeto = null;
+	
 	public final boolean banned;
 	public final String team;
 	public final int i;
@@ -62,13 +64,28 @@ public class PlayerLabel extends Label {
 		this.setOnMouseClicked(me -> {
 			if(me.getButton() == MouseButton.PRIMARY && !this.getText().contains(" (R)") && !this.banned) {
 				this.setText(this.getText() + " (R)");
-				ServerApp.sendToAll("set_name red:" + i + ":" + this.getText() + ":" + this.id);
+				uploadName();
 			}
 			if(me.getButton() == MouseButton.SECONDARY) {
 				this.setText(this.getText().replace(" (R)", ""));
-				ServerApp.sendToAll("set_name red:" + i + ":" + this.getText() + ":" + this.id);
+				uploadName();
+			}
+			if(me.getButton() == MouseButton.MIDDLE && i <= 4 && changeto == null) {
+				changeto = this;
+			}
+			if(me.getButton() == MouseButton.MIDDLE && i > 4 && changeto != null) {
+				String tmp = changeto.getText();
+				changeto.setText(this.getText());
+				this.setText(tmp);
+				changeto.uploadName();
+				changeto = null;
 			}
 		});
+	}
+	
+	public void uploadName() {
+		if(i < 5)
+		ServerApp.sendToAll("set_name " + team + ":" + i + ":" + this.getText() + ":" + this.id);
 	}
 	
 }

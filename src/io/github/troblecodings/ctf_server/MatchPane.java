@@ -19,8 +19,7 @@ package io.github.troblecodings.ctf_server;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -46,18 +45,18 @@ import javafx.stage.Stage;
 public class MatchPane extends GridPane implements Runnable {
 
 	public static HashMap<Integer, MatchPane> MATCHES = new HashMap<Integer, MatchPane>();
-	
+
 	private Label team_a = new Label("Team Red");
 	private Label team_b = new Label("Team Blue");
 	private Label time = new Label("Time: 0");
-	private boolean isRunning = false,isPause = false, isLoaded = false;
+	private boolean isRunning = false, isPause = false, isLoaded = false;
 	private Thread thr = new Thread(this);
 	private long last = 0;
 	public Button start, stop = new Button("Pause");
 	private Path loaded_file;
 	private int matchid;
 	private JSONObject cmatch;
-	
+
 	/**
 	 * @param id
 	 */
@@ -71,7 +70,7 @@ public class MatchPane extends GridPane implements Runnable {
 		for (int y = 1; y < 5; y++) {
 			this.add(new Label("Player " + y), 0, y);
 		}
-		
+
 		this.add(team_a, 1, 0);
 		this.add(team_b, 2, 0);
 		Button load = new Button("Load");
@@ -82,8 +81,9 @@ public class MatchPane extends GridPane implements Runnable {
 			dialog.getDialogPane().setContent(plans);
 			((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 			dialog.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.CANCEL);
-			dialog.setResultConverter(bt ->  {
-				if(bt.equals(ButtonType.APPLY))return plans.getSelectionModel().getSelectedItem().getText();
+			dialog.setResultConverter(bt -> {
+				if (bt.equals(ButtonType.APPLY))
+					return plans.getSelectionModel().getSelectedItem().getText();
 				return null;
 			});
 			ObservableList<Label> itms = plans.getItems();
@@ -91,7 +91,9 @@ public class MatchPane extends GridPane implements Runnable {
 			itms.add(new Label("List of matches"));
 
 			try {
-				Files.list(ServerApp.path_plan).filter(pth -> {return Files.isRegularFile(pth) && pth.toString().endsWith(".json");}).forEach(pth -> {
+				Files.list(ServerApp.path_plan).filter(pth -> {
+					return Files.isRegularFile(pth) && pth.toString().endsWith(".json");
+				}).forEach(pth -> {
 					Label lab = new Label(pth.getFileName().toString().replace(".json", ""));
 					itms.add(lab);
 				});
@@ -105,24 +107,28 @@ public class MatchPane extends GridPane implements Runnable {
 				alert.setContentText("Match: " + stri);
 				((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 				alert.showAndWait().ifPresent(tp -> {
-					if(tp == ButtonType.OK) {
+					if (tp == ButtonType.OK) {
 						try {
 							loaded_file = Paths.get(ServerApp.path_plan.toString(), stri + ".json");
 							String str = new String(Files.readAllBytes(loaded_file));
 							JSONObject obj = new JSONObject(str);
-							if(this.fillWithJson(obj)) {}
+							if (this.fillWithJson(obj)) {
+							}
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
 					}
-				});;
+				});
+				;
 			});
 		});
 		start = new Button("Start");
 		start.setOnAction(evn -> {
 			start.setDisable(true);
-			if(!this.isPause)this.start();
-			else ServerApp.sendToAll("match_unpause " + matchid);
+			if (!this.isPause)
+				this.start();
+			else
+				ServerApp.sendToAll("match_unpause " + matchid);
 			last = new Date().getTime();
 			this.isPause = false;
 			stop.setDisable(false);
@@ -154,7 +160,7 @@ public class MatchPane extends GridPane implements Runnable {
 		long ne = 0;
 		long delta = ServerApp.MINS * 60000;
 		while (delta > 0) {
-			if(this.isPause) {
+			if (this.isPause) {
 				try {
 					// Performance?
 					Thread.sleep(10);
@@ -188,10 +194,12 @@ public class MatchPane extends GridPane implements Runnable {
 		thr.stop();
 		try {
 			ServerApp.LOGGER.println(rs.replace(":", ""));
-			cmatch.getJSONObject("1").put("result", rs.replace(":", "").equals("red_win") ? 2:0);
-			cmatch.getJSONObject("2").put("result", rs.replace(":", "").equals("blue_win") ? 2:0);
-			Path pth = Paths.get(ServerApp.path_history.toString(), team_a.getText() + " vs " + team_b.getText() + ".json");
-			if(Files.exists(pth))Files.delete(pth);
+			cmatch.getJSONObject("1").put("result", rs.replace(":", "").equals("red_win") ? 2 : 0);
+			cmatch.getJSONObject("2").put("result", rs.replace(":", "").equals("blue_win") ? 2 : 0);
+			Path pth = Paths.get(ServerApp.path_history.toString(),
+					team_a.getText() + " vs " + team_b.getText() + ".json");
+			if (Files.exists(pth))
+				Files.delete(pth);
 			BufferedWriter writer = Files.newBufferedWriter(Files.createFile(pth));
 			cmatch.write(writer);
 			writer.flush();
@@ -203,8 +211,11 @@ public class MatchPane extends GridPane implements Runnable {
 			this.time.setText("End");
 			Alert alert = new Alert(AlertType.INFORMATION);
 			alert.setTitle("Match end!");
-			if(rs != "time:")alert.setHeaderText((rs.replace(":", "").equals("blue_win") ? "Blue":"Red") + " has won the match on field " + matchid);
-			else alert.setHeaderText("Time has run out on field " + matchid);
+			if (rs != "time:")
+				alert.setHeaderText((rs.replace(":", "").equals("blue_win") ? "Blue" : "Red")
+						+ " has won the match on field " + matchid);
+			else
+				alert.setHeaderText("Time has run out on field " + matchid);
 			((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(ServerApp.ICON);
 			alert.show();
 		});
@@ -262,21 +273,30 @@ public class MatchPane extends GridPane implements Runnable {
 		JSONArray pred = jred.getJSONArray("players");
 		JSONArray pblue = jblue.getJSONArray("players");
 		int i = 1;
+		List<String> bans = null;
+		List<String> strikes = null;
+		try {
+			bans = Files.readAllLines(SocketInput.BANS);
+			strikes = Files.readAllLines(SocketInput.STRIKES);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		red: for (Object str : pred.toList()) {
-			try {
-				for (String ins : Files.readAllLines(SocketInput.BANS)) {
-					if (str.toString().replace(" (S)", "").equals(ins.replace(" (S)", ""))) {
-						ServerApp.sendToAll("ban " + i + ":" + matchid);
-						continue red;
-					}
+			for (String ins : bans) {
+				if (ins.equals(str.toString())) {
+					this.add(new PlayerLabel(), 1, i);
+					ServerApp.sendToAll("ban " + "red:" + i + ":" + matchid);
+					i++;
+					continue red;
 				}
-				for (String ins : Files.readAllLines(SocketInput.STRIKES)) {
-					if (str.toString().replace(" (S)", "").equals(ins.replace(" (S)", ""))) {
-						ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + " (S):" + matchid);
-						continue red;
-					}
+			}
+			for (String ins : strikes) {
+				if (str.toString().equals(ins)) {
+					this.add(new PlayerLabel(str.toString() + " (S)", Color.RED), 1, i);
+					ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + " (S):" + matchid);			
+					i++;
+					continue red;
 				}
-			} catch (IOException e) {
 			}
 			this.add(new PlayerLabel(str.toString(), Color.RED), 1, i);
 			ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + ":" + matchid);
@@ -284,22 +304,21 @@ public class MatchPane extends GridPane implements Runnable {
 		}
 		i = 1;
 		blue: for (Object str : pblue.toList()) {
-			try {
-				for (String ins : Files.readAllLines(SocketInput.BANS)) {
-					if (str.toString().replace(" (S)", "").equals(ins.replace(" (S)", ""))) {
-						ServerApp.sendToAll("ban " + i + ":" + matchid);
-						this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
-						continue blue;
-					}
+			for (String ins : bans) {
+				if (ins.equals(str.toString())) {
+					this.add(new PlayerLabel(), 2, i);
+					ServerApp.sendToAll("ban " + "blue:" + i + ":" + matchid);
+					i++;
+					continue blue;
 				}
-				for (String ins : Files.readAllLines(SocketInput.STRIKES)) {
-					if (str.toString().replace(" (S)", "").equals(ins.replace(" (S)", ""))) {
-						this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
-						ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + " (S):" + matchid);
-						continue blue;
-					}
+			}
+			for (String ins : strikes) {
+				if (str.toString().equals(ins)) {
+					this.add(new PlayerLabel(str.toString() + " (S)", Color.AQUA), 2, i);
+					ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + " (S):" + matchid);			
+					i++;
+					continue blue;
 				}
-			} catch (IOException e) {
 			}
 			this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
 			ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + ":" + matchid);

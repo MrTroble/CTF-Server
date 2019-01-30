@@ -42,7 +42,7 @@ public class ServerApp extends Application implements Runnable {
 
 	public static LoggerFile LOGGER;
 	private static ServerSocket sslserver;
-	public static ArrayList<Socket> sockets = new ArrayList<>();
+	public static HashMap<Socket, PrintWriter> sockets = new HashMap<>();
 	public static ExecutorService service;
 	public static Path path_plan = Paths.get("game_plans");
 	public static Path path_history = Paths.get("match_history");
@@ -52,7 +52,8 @@ public class ServerApp extends Application implements Runnable {
 	public static int MINS = 3;
 	public static TextArea CONSOLE = new TextArea();
 	public static GridPane root;
-
+	public static FileServer server;
+	
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {
 		Date date = new Date();
@@ -69,23 +70,21 @@ public class ServerApp extends Application implements Runnable {
 			Files.createFile(SocketInput.STRIKES);
 		if (!Files.exists(SocketInput.BANS))
 			Files.createFile(SocketInput.BANS);
+		try(final DatagramSocket socket = new DatagramSocket()){
+			  socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+			  LOGGER.println(socket.getLocalAddress().getHostAddress().toString());
+		}
+		server = new FileServer(Paths.get("app.apk"), "/app/");
 		launch(args);
 	}
 
 	public static void sendToAll(String nm) {
-		Iterator<Socket> it = sockets.iterator();
-		while (it.hasNext()) {
-			Socket sk = it.next();
-			PrintWriter wr;
-			try {
-				wr = new PrintWriter(sk.getOutputStream());
-				wr.println(nm);
-				wr.flush();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		sockets.forEach((sk, wr) -> {
+			wr.println(nm);
+			wr.println();
+			wr.flush();
 			LOGGER.println("Sendet " + sk + " " + nm);
-		}
+		});
 	}
 
 	/*
@@ -166,6 +165,7 @@ public class ServerApp extends Application implements Runnable {
 			Optional<ButtonType> btn = alert.showAndWait();
 			if (btn.isPresent() && btn.get() == ButtonType.OK) {
 				try {
+					server.stop();
 					th.stop();
 					ServerApp.sslserver.close();
 				} catch (IOException e) {
@@ -248,7 +248,6 @@ public class ServerApp extends Application implements Runnable {
 					obj.write(writer);
 					writer.flush();
 					writer.close();
-					updatePlanList();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -278,9 +277,6 @@ public class ServerApp extends Application implements Runnable {
 		primaryStage.show();
 	}
 
-	private void updatePlanList() {
-	}
-
 	private static int PORT = 555;
 
 	/*
@@ -297,7 +293,7 @@ public class ServerApp extends Application implements Runnable {
 			while (true) {
 				Socket sk = sslserver.accept();
 				LOGGER.println(sk + " connected to server");
-				sockets.add(sk);
+				sockets.put(sk, new PrintWriter(sk.getOutputStream()));
 				service.submit(new SocketInput(sk));
 			}
 		} catch (Exception e) {

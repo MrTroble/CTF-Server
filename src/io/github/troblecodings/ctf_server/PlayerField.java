@@ -38,7 +38,7 @@ public class PlayerField extends TextField implements EventHandler<ActionEvent>{
 		this.setText(this.team + index);
 		this.setOnAction(this);
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see javafx.event.EventHandler#handle(javafx.event.Event)
 	 */

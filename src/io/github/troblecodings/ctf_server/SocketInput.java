@@ -53,17 +53,19 @@ public class SocketInput implements Runnable {
 	public void run() {
 		try {
 			Scanner scanner = new Scanner(socket.getInputStream());
-			PrintWriter writer = new PrintWriter(socket.getOutputStream());
+			PrintWriter writer = ServerApp.sockets.get(socket);
 			if (scanner.hasNextLine()) {
 				String str = scanner.nextLine();
 				if (!str.equals(ServerApp.SERVER_PW)) {
 					ServerApp.LOGGER.println(socket + " Wrong admin password! Using as reciver!");
 					writer.println("motd " + ServerApp.MOTD + "%n(Wrong password -> you are a reciver)");
+					writer.println();
 					writer.flush();
 					return;
 				}
 			}
 			writer.println("motd " + ServerApp.MOTD);
+			writer.println();
 			writer.flush();
 			ServerApp.LOGGER.println(socket + " Admin access granted!");
 			while (scanner.hasNextLine()) {

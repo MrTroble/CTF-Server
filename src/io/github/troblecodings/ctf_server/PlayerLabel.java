@@ -28,6 +28,8 @@ import javafx.scene.text.Font;
  */
 public class PlayerLabel extends Label {
 
+	public final boolean banned;
+	
 	/**
 	 * 
 	 */
@@ -35,6 +37,14 @@ public class PlayerLabel extends Label {
 		super(str);
 		this.setFont(Font.font(25));
 		this.setBackground(new Background(new BackgroundFill(cl, new CornerRadii(5), new Insets(-5))));
+		banned = false;
+	}
+	
+	public PlayerLabel() {
+		super("BANNED");
+		this.setFont(Font.font(25));
+		this.setBackground(new Background(new BackgroundFill(Color.DARKSALMON, new CornerRadii(5), new Insets(-5))));
+		banned = true;
 	}
 	
 }

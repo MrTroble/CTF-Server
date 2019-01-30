@@ -19,6 +19,8 @@ package io.github.troblecodings.ctf_server;
 import java.io.*;
 import java.util.Date;
 
+import javafx.application.Platform;
+
 /**
  * @author MrTroble
  *
@@ -50,10 +52,13 @@ public class LoggerFile extends PrintStream {
 	public void write(byte[] buf, int off, int len) {
 		super.write(buf, off, len);
 		System.out.write(buf, off, len);
-		if(ServerApp.CONSOLE.getText() != null && ServerApp.CONSOLE.getText().split(System.lineSeparator()).length > 2000) {
-			ServerApp.CONSOLE.clear();
-		}
-		ServerApp.CONSOLE.appendText(new String(buf, off, len));
+		final String str = new String(buf, off, len);
+		Platform.runLater(() -> {
+			if(ServerApp.CONSOLE.getText() != null && ServerApp.CONSOLE.getText().split(System.lineSeparator()).length > 2000) {
+				ServerApp.CONSOLE.clear();
+			}
+			ServerApp.CONSOLE.appendText(str);
+		});
 		this.flush();
 	}
 

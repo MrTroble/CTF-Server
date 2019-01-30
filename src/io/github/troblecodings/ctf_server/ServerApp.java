@@ -8,14 +8,19 @@ import java.util.concurrent.*;
 
 import org.json.*;
 
+import com.google.zxing.*;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.image.Image;
-import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
+import javafx.scene.image.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.stage.*;
 import javafx.util.Pair;
 
 /*-*****************************************************************************
@@ -53,6 +58,7 @@ public class ServerApp extends Application implements Runnable {
 	public static TextArea CONSOLE = new TextArea();
 	public static GridPane root;
 	public static FileServer server;
+	private static String address;
 	
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws Exception {
@@ -72,7 +78,7 @@ public class ServerApp extends Application implements Runnable {
 			Files.createFile(SocketInput.BANS);
 		try(final DatagramSocket socket = new DatagramSocket()){
 			  socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
-			  LOGGER.println(socket.getLocalAddress().getHostAddress().toString());
+			  LOGGER.println(address = socket.getLocalAddress().getHostAddress().toString());
 		}
 		server = new FileServer(Paths.get("app.apk"), "/app/");
 		launch(args);
@@ -86,7 +92,32 @@ public class ServerApp extends Application implements Runnable {
 			LOGGER.println("Sendet " + sk + " " + nm);
 		});
 	}
-
+	
+	private void showQR(String str, String tit)
+	{
+		Stage qrcode = new Stage();
+		qrcode.setTitle(tit);
+		qrcode.getIcons().add(ServerApp.ICON);
+		qrcode.initModality(Modality.NONE);
+		StackPane qrpane = new StackPane();
+		QRCodeWriter qrwr = new QRCodeWriter();
+		BitMatrix matrix = null;
+		try {
+			matrix = qrwr.encode(str, BarcodeFormat.QR_CODE, 200, 200);
+		} catch (WriterException e) {
+			e.printStackTrace();
+		}
+		WritableImage image = new WritableImage(200, 200);
+		for (int i = 0; i < 200; i++) {
+			for (int j = 0; j < 200; j++) {
+				if(matrix.get(i, j))
+				image.getPixelWriter().setColor(i, j, Color.BLACK);
+			}
+		}
+		qrpane.getChildren().add(new ImageView(image));
+		qrcode.setScene(new Scene(qrpane, 300, 200));
+		qrcode.show();
+	}
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -97,8 +128,12 @@ public class ServerApp extends Application implements Runnable {
 	public void start(Stage primaryStage) throws Exception {
 		Thread th = new Thread(this);
 		LOGGER.println("Set networking config!");
+			
+		showQR("http://" + address + ":333/app/", "App download");
+		
 		Dialog<Pair<String, String>> config = new Dialog<>();
 		config.setTitle("Server config!");
+		config.initModality(Modality.NONE);
 		GridPane configpane = new GridPane();
 
 		configpane.add(new Label("Port"), 0, 0);
@@ -148,6 +183,9 @@ public class ServerApp extends Application implements Runnable {
 			// Starting server
 			th.start();
 		});
+		
+		showQR(address + "\n" + PORT + "\n" + SERVER_PW + "\n0", "Match 0 setup");
+		showQR(address + "\n" + PORT + "\n" + SERVER_PW + "\n1", "Match 1 setup");
 
 		root = new GridPane();
 		Scene sc = new Scene(root, 1000, 650);

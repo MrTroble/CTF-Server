@@ -93,11 +93,14 @@ public class ServerApp extends Application implements Runnable {
 		});
 	}
 	
-	private void showQR(String str, String tit)
+	private void showQR(String str, String tit,int y)
 	{
 		Stage qrcode = new Stage();
 		qrcode.setTitle(tit);
 		qrcode.getIcons().add(ServerApp.ICON);
+		qrcode.setX(0);
+		qrcode.setY(250 * y);
+		qrcode.setResizable(false);
 		qrcode.initModality(Modality.NONE);
 		StackPane qrpane = new StackPane();
 		QRCodeWriter qrwr = new QRCodeWriter();
@@ -129,7 +132,7 @@ public class ServerApp extends Application implements Runnable {
 		Thread th = new Thread(this);
 		LOGGER.println("Set networking config!");
 			
-		showQR("http://" + address + ":333/app/", "App download");
+		showQR("http://" + address + ":333/app/", "App download", 0);
 		
 		Dialog<Pair<String, String>> config = new Dialog<>();
 		config.setTitle("Server config!");
@@ -184,8 +187,8 @@ public class ServerApp extends Application implements Runnable {
 			th.start();
 		});
 		
-		showQR(address + "\n" + PORT + "\n" + SERVER_PW + "\n0", "Match 0 setup");
-		showQR(address + "\n" + PORT + "\n" + SERVER_PW + "\n1", "Match 1 setup");
+		showQR(address + "\n" + PORT + "\n" + SERVER_PW + "\n0", "Match 0 setup", 1);
+		showQR(address + "\n" + PORT + "\n" + SERVER_PW + "\n1", "Match 1 setup", 2);
 
 		root = new GridPane();
 		Scene sc = new Scene(root, 1000, 650);

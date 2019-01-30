@@ -128,6 +128,9 @@ public class SocketInput implements Runnable {
 					System.out.println(args[2].replace(" (S)", ""));
 					if (str.replace(" (S)", "").equals(args[2].replace(" (S)", ""))) {
 						ServerApp.sendToAll("ban " + args[0] + ":" + args[1] + ":" + args[3]);
+						Platform.runLater(() -> {
+							MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).onMatchFinished(args[0].equals("blue") ? "red_win:":"blue_win:");
+						});
 						try {
 							Files.write(BANS, (str + System.lineSeparator()).getBytes(), StandardOpenOption.APPEND);
 						} catch (Exception ex) {
@@ -136,7 +139,9 @@ public class SocketInput implements Runnable {
 					}
 				}
 				Files.write(STRIKES, (args[2] + System.lineSeparator()).getBytes(), StandardOpenOption.APPEND);
-				ServerApp.sendToAll("set_name " + args[0] + ":" + args[1] + ":" + args[2] + " (S):" + args[3]);
+				Platform.runLater(() -> {
+					MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).onMatchFinished(args[0].equals("blue") ? "red_win:":"blue_win:");
+				});
 				break;
 			}
 		} catch (Exception e) {

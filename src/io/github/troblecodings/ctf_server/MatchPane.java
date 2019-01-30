@@ -232,7 +232,7 @@ public class MatchPane extends GridPane implements Runnable {
 		}
 		boolean team_dead = true;
 		for (int i = 0; i < 4; i++) {
-			if (!sorted.get(i).isDisabled()) {
+			if (!sorted.get(i).isDisabled() && !((PlayerLabel)sorted.get(i)).banned) {
 				team_dead = false;
 				break;
 			}
@@ -242,7 +242,7 @@ public class MatchPane extends GridPane implements Runnable {
 		}
 		team_dead = true;
 		for (int i = 4; i < 8; i++) {
-			if (!sorted.get(i).isDisabled()) {
+			if (!sorted.get(i).isDisabled() && !((PlayerLabel)sorted.get(i)).banned) {
 				team_dead = false;
 				break;
 			}
@@ -292,13 +292,13 @@ public class MatchPane extends GridPane implements Runnable {
 			}
 			for (String ins : strikes) {
 				if (str.toString().equals(ins)) {
-					this.add(new PlayerLabel(str.toString() + " (S)", Color.RED), 1, i);
+					this.add(new PlayerLabel( "red", i, matchid, str.toString() + " (S)", Color.RED), 1, i);
 					ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + " (S):" + matchid);			
 					i++;
 					continue red;
 				}
 			}
-			this.add(new PlayerLabel(str.toString(), Color.RED), 1, i);
+			this.add(new PlayerLabel("red", i, matchid, str.toString(), Color.RED), 1, i);
 			ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + ":" + matchid);
 			i++;
 		}
@@ -314,13 +314,13 @@ public class MatchPane extends GridPane implements Runnable {
 			}
 			for (String ins : strikes) {
 				if (str.toString().equals(ins)) {
-					this.add(new PlayerLabel(str.toString() + " (S)", Color.AQUA), 2, i);
+					this.add(new PlayerLabel("blue", i, matchid, str.toString() + " (S)", Color.AQUA), 2, i);
 					ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + " (S):" + matchid);			
 					i++;
 					continue blue;
 				}
 			}
-			this.add(new PlayerLabel(str.toString(), Color.AQUA), 2, i);
+			this.add(new PlayerLabel("blue", i, matchid, str.toString(), Color.AQUA), 2, i);
 			ServerApp.sendToAll("set_name blue:" + i + ":" + str.toString() + ":" + matchid);
 			i++;
 		}

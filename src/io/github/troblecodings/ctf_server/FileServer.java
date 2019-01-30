@@ -43,7 +43,7 @@ public class FileServer{
 		}
 		
 		try {
-			server = HttpServer.create(new InetSocketAddress(80), 100);
+			server = HttpServer.create(new InetSocketAddress(333), 100);
 			server.setExecutor(null);
 		} catch (IOException e) {
 			e.printStackTrace();

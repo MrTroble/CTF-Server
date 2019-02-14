@@ -143,6 +143,16 @@ public class SocketInput implements Runnable {
 					MatchPane.MATCHES.get(Integer.valueOf(args[args.length - 1])).onMatchFinished(args[0].equals("blue") ? "red_win:":"blue_win:");
 				});
 				break;
+			case "runner":
+				ServerApp.sendToAll("set_name " + args[0] + ":" + args[1] + ":" + args[2].replace(" (R)", "") + " (R)" + ":" + args[3]);
+				break;
+			case "unrunner":
+				ServerApp.sendToAll("set_name " + args[0] + ":" + args[1] + ":" + args[2].replace(" (R)", "") + ":" + args[3]);
+				break;
+			case "change":
+				ServerApp.sendToAll("set_name " + args[0] + ":" + args[3] + ":" + args[4] + ":" + args[5]);
+				ServerApp.sendToAll("set_name " + args[0] + ":" + args[1] + ":" + args[2] + ":" + args[5]);
+				break;
 			}
 		} catch (Exception e) {
 		}

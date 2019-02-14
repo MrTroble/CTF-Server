@@ -229,17 +229,20 @@ public class MatchPane extends GridPane implements Runnable {
 	}
 
 	public void killPlayer(String[] args, boolean b) {
-		ObservableList<Node> sorted = this.getChildren().filtered(nd -> {
-			return nd instanceof PlayerLabel;
+		ObservableList<Node> red_team = this.getChildren().filtered(nd -> {
+			return nd instanceof PlayerLabel && ((PlayerLabel)nd).team == "red";
+		});
+		ObservableList<Node> blue_team = this.getChildren().filtered(nd -> {
+			return nd instanceof PlayerLabel && ((PlayerLabel)nd).team == "blue";
 		});
 		if (args[0].equals("red")) {
-			sorted.get(Integer.valueOf(args[1]) - 1).setDisable(b);
+			red_team.get(Integer.valueOf(args[1]) - 1).setDisable(b);
 		} else {
-			sorted.get(Integer.valueOf(args[1]) + 3).setDisable(b);
+			blue_team.get(Integer.valueOf(args[1]) - 1).setDisable(b);
 		}
 		boolean team_dead = true;
 		for (int i = 0; i < 4; i++) {
-			if (!sorted.get(i).isDisabled() && !((PlayerLabel)sorted.get(i)).banned) {
+			if (!red_team.get(i).isDisabled() && !((PlayerLabel)red_team.get(i)).banned) {
 				team_dead = false;
 				break;
 			}
@@ -248,8 +251,8 @@ public class MatchPane extends GridPane implements Runnable {
 			onMatchFinished("blue_win:");
 		}
 		team_dead = true;
-		for (int i = 4; i < 8; i++) {
-			if (!sorted.get(i).isDisabled() && !((PlayerLabel)sorted.get(i)).banned) {
+		for (int i = 0; i < 4; i++) {
+			if (!blue_team.get(i).isDisabled() && !((PlayerLabel)blue_team.get(i)).banned) {
 				team_dead = false;
 				break;
 			}
@@ -292,7 +295,7 @@ public class MatchPane extends GridPane implements Runnable {
 			for (String ins : bans) {
 				if (ins.equals(str.toString())) {
 					this.add(new PlayerLabel(), 1, i);
-					if(i < 5)ServerApp.sendToAll("ban " + "red:" + i + ":" + matchid);
+					ServerApp.sendToAll("ban " + "red:" + i + ":" + matchid);
 					i++;
 					continue red;
 				}
@@ -300,13 +303,13 @@ public class MatchPane extends GridPane implements Runnable {
 			for (String ins : strikes) {
 				if (str.toString().equals(ins)) {
 					this.add(new PlayerLabel( "red", i, matchid, str.toString() + " (S)", Color.RED), 1, i);
-					if(i < 5)ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + " (S):" + matchid);			
+					ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + " (S):" + matchid);			
 					i++;
 					continue red;
 				}
 			}
 			this.add(new PlayerLabel("red", i, matchid, str.toString(), Color.RED), 1, i);
-			if(i < 5)ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + ":" + matchid);
+			ServerApp.sendToAll("set_name red:" + i + ":" + str.toString() + ":" + matchid);
 			i++;
 		}
 		i = 1;

@@ -29,7 +29,6 @@ import com.sun.net.httpserver.*;
 public class FileServer{
 
 	private HttpServer server;
-	private HttpContext app_context;
 	private byte[] file;
 	
 	/**
@@ -49,15 +48,16 @@ public class FileServer{
 			e.printStackTrace();
 		}
 
-		app_context = server.createContext(ctx);
-		app_context.setHandler(exch -> {
+		HttpHandler handler = exch -> {
 			exch.getResponseHeaders().add("Content-Disposition", "attachment; filename=" + fl.getFileName());
 			exch.sendResponseHeaders(200, file.length);
 			OutputStream str = exch.getResponseBody();
 			str.write(file);
 			str.flush();
 			str.close();
-		});
+		};
+		server.createContext(ctx).setHandler(handler);
+		server.createContext("/" + ctx.replace("/", "")).setHandler(handler);
 		server.start();
 	}
 	

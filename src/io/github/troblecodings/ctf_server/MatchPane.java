@@ -276,8 +276,8 @@ public class MatchPane extends GridPane implements Runnable {
 		this.cmatch = json;
 		this.getChildren().clear();
 		this.init();
-		JSONObject jred = (JSONObject) json.getJSONObject("1");
-		JSONObject jblue = (JSONObject) json.getJSONObject("2");
+		JSONObject jred = json.getJSONObject("1");
+		JSONObject jblue = json.getJSONObject("2");
 		team_a.setText(jred.getString("name"));
 		team_b.setText(jblue.getString("name"));
 		JSONArray pred = jred.getJSONArray("players");
